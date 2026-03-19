@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="iconLeft"><!---->
+  <linearGradient gradientTransform="rotate(25)"
+    id="0e171ee4-4b60-4404-8cd9-a6f636f06bc3" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#00EEE1" stop-opacity="1"></stop>
+    <stop offset="100%" stop-color="#FFD233" stop-opacity="1"></stop>
+  </linearGradient>
+  <g id="b91d4efc-124c-4f53-a3d4-33124154000d" stroke="none"
+    fill="url(#0e171ee4-4b60-4404-8cd9-a6f636f06bc3)">
+    <path
+      d="M9.382 8.675h13.943v13.943L32 31.293V0H.707zM22.618 23.325H8.675V9.382L0 .707V32h31.293z"></path>
+  </g>
+</svg>

@@ -4,6 +4,7 @@ import { debug } from '@tauri-apps/plugin-log';
 import Sidebar from './components/Sidebar.vue';
 import CanvasArea from './components/CanvasArea.vue';
 import type { ImageInfo, Shape, LabelmeData } from './types';
+import TitleBar from './components/TitleBar.vue';
 
 const SERVER_URL = 'http://localhost:3000';
 
@@ -437,6 +438,10 @@ onMounted(() => {
 
 <template>
   <div class="labelme-container">
+    <TitleBar
+      avatar="https://avatars.githubusercontent.com/u/109729945"
+      link="https://github.com/initialencounter/labeldroid"
+    ></TitleBar>
     <Sidebar
       :images="images"
       :currentImage="currentImage"

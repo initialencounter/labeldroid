@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "share",
+  "src-tauri",
+  "bindings/node",
+  "types"
+]
+resolver = "2"

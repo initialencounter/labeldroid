@@ -41,3 +41,5 @@ ehthumbs.db
 .vite
 
 .yarn
+
+/target

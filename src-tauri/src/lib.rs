@@ -1,10 +1,23 @@
-mod server;
-use tauri::Manager;
+mod apply;
+mod command;
+mod handle;
+mod menu;
+mod utils;
+use crate::command as cmd;
+
+use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::{Target, TargetKind};
+
+use crate::handle::handle_setup;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info) // 只输出 Info 及以上级别，过滤 Debug
@@ -22,13 +35,21 @@ pub fn run() {
                 })
                 .build(),
         )
-        .setup(|app| -> Result<(), Box<dyn std::error::Error>> {
-            let server = server::FileManangerServer::new(app.handle().clone());
-            let _ = server.start();
-            app.manage(server);
+        .setup(|app| {
+            handle_setup(app);
+            apply::apply(app);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![
+            cmd::reload_config,
+            cmd::open_local_dir,
+            cmd::open_with_wps,
+            cmd::minimize_window,
+            cmd::maximize_window,
+            cmd::unmaximize_window,
+            cmd::hide_window,
+            cmd::get_server_port,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

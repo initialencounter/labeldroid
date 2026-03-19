@@ -6,12 +6,14 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, sync::atomic::AtomicU64};
 use std::sync::{Arc, Mutex};
-use tauri::Manager;
 use tower_http::cors::{Any, CorsLayer};
 
-pub struct FileManangerServer {
+use crate::utils::bind_available_port;
+
+pub struct ServerManager {
+    port: u16,
     app: Arc<Mutex<axum::Router>>,
 }
 
@@ -19,7 +21,6 @@ pub struct FileManangerServer {
 struct AppState {
     workspace_dir: PathBuf,
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Shape {
@@ -47,27 +48,10 @@ struct ImageInfo {
     has_annotation: bool,
 }
 
-impl FileManangerServer {
-    pub fn new(app_handle: tauri::AppHandle) -> Self {
-        let workspace_dir = if let Ok(dir) = app_handle.path().download_dir() {
-            dir
-        } else {
-            #[cfg(target_os = "android")]
-            let fallback_dir = PathBuf::from("/storage/emulated/0/Download/labeldroid");
+pub static SERVER_PORT: AtomicU64 = AtomicU64::new(3000);
 
-            #[cfg(not(target_os = "android"))]
-            let fallback_dir = {
-                let current_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-                current_dir.parent().unwrap_or(&current_dir).join("tmp")
-            };
-
-            fallback_dir
-        };
-
-        if !workspace_dir.exists() {
-            std::fs::create_dir_all(&workspace_dir).unwrap_or(());
-        }
-
+impl ServerManager {
+    pub fn new(workspace_dir: PathBuf, port: u16) -> Self {
         let state = AppState { workspace_dir };
 
         // CORS
@@ -87,19 +71,21 @@ impl FileManangerServer {
             .with_state(state);
 
         Self {
+            port,
             app: Arc::new(Mutex::new(app)),
         }
     }
 
     pub fn start(&self) {
         let app = Arc::clone(&self.app);
+        let port = self.port;
         let _ = std::thread::spawn(move || {
             if let Ok(rt) = tokio::runtime::Runtime::new() {
                 rt.block_on(async {
                     let app = app.lock().unwrap().clone();
-                    // Using IP and Port 3000
-                    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-                    println!("Listening on port 3000");
+                    let (listener, current_port) = bind_available_port(port).await.unwrap();
+                    SERVER_PORT.store(current_port as u64, std::sync::atomic::Ordering::Relaxed);
+                    println!("Listening on port {}", current_port);
                     axum::serve(listener, app).await.unwrap();
                 });
             }
