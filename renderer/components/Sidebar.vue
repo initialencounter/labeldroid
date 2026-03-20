@@ -20,6 +20,13 @@ watch(() => props.shapes, (newShapes) => {
 
 const uniqueLabels = computed(() => Array.from(cachedLabels.value));
 
+const searchQuery = ref('');
+const lastSearchIndex = ref(-1);
+
+watch(searchQuery, () => {
+  lastSearchIndex.value = -1;
+});
+
 const emit = defineEmits<{
   (e: 'select-image', img: ImageInfo): void;
   (e: 'refresh-images'): void;
@@ -30,6 +37,31 @@ const emit = defineEmits<{
   (e: 'shape-label-change'): void;
   (e: 'update:isEditMode', value: boolean): void;
 }>();
+
+const handleSearch = () => {
+  if (!searchQuery.value) {
+    lastSearchIndex.value = -1;
+    return;
+  }
+  const query = searchQuery.value.toLowerCase();
+  let targetIndex = props.images.findIndex((img, idx) => idx > lastSearchIndex.value && img.name.toLowerCase().includes(query));
+  
+  if (targetIndex === -1) {
+    targetIndex = props.images.findIndex(img => img.name.toLowerCase().includes(query));
+  }
+
+  if (targetIndex !== -1) {
+    lastSearchIndex.value = targetIndex;
+    const targetImg = props.images[targetIndex];
+    emit('select-image', targetImg);
+    setTimeout(() => {
+      const el = document.getElementById('img-item-' + targetIndex);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  }
+};
 
 const getVocColormap = () => {
   const cmap = [];
@@ -79,10 +111,17 @@ const updateDefaultLabelName = (event: Event) => {
 
     <div class="section scrollable">
       <h3>图片列表</h3>
+      <input
+        v-model="searchQuery"
+        class="label-input search-input"
+        placeholder="搜索图片 (回车跳转)..."
+        @keydown.enter="handleSearch"
+      />
       <ul class="image-list">
         <li
-          v-for="img in images"
+          v-for="(img, index) in images"
           :key="img.name"
+          :id="'img-item-' + index"
           @click="emit('select-image', img)"
           :class="{ active: currentImage?.name === img.name }"
         >
@@ -206,6 +245,10 @@ const updateDefaultLabelName = (event: Event) => {
   margin-bottom: 8px;
   font-size: 15px;
   color: #333;
+}
+
+.search-input {
+  margin-bottom: 8px;
 }
 
 .label-input {
