@@ -14,9 +14,15 @@ const props = defineProps<{
 
 const cachedLabels = ref<Set<string>>(new Set());
 
-watch(() => props.shapes, (newShapes) => {
-  newShapes.forEach(s => cachedLabels.value.add(s.label));
-}, { immediate: true, deep: true });
+const isPhone = computed(() => window.innerWidth <= 1280);
+
+watch(
+  () => props.shapes,
+  (newShapes) => {
+    newShapes.forEach((s) => cachedLabels.value.add(s.label));
+  },
+  { immediate: true, deep: true },
+);
 
 const uniqueLabels = computed(() => Array.from(cachedLabels.value));
 
@@ -45,10 +51,15 @@ const handleSearch = () => {
     return;
   }
   const query = searchQuery.value.toLowerCase();
-  let targetIndex = props.images.findIndex((img, idx) => idx > lastSearchIndex.value && img.name.toLowerCase().includes(query));
-  
+  let targetIndex = props.images.findIndex(
+    (img, idx) =>
+      idx > lastSearchIndex.value && img.name.toLowerCase().includes(query),
+  );
+
   if (targetIndex === -1) {
-    targetIndex = props.images.findIndex(img => img.name.toLowerCase().includes(query));
+    targetIndex = props.images.findIndex((img) =>
+      img.name.toLowerCase().includes(query),
+    );
   }
 
   if (targetIndex !== -1) {
@@ -67,7 +78,9 @@ const handleSearch = () => {
 const getVocColormap = () => {
   const cmap = [];
   for (let i = 0; i < 256; i++) {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
     let c = i;
     for (let j = 0; j < 8; j++) {
       r = r | (((c >> 0) & 1) << (7 - j));
@@ -84,18 +97,22 @@ const vocColormap = getVocColormap();
 
 const jumpToNextUnlabeled = () => {
   if (props.images.length === 0) return;
-  
+
   let startIndex = 0;
   if (props.currentImage) {
-    startIndex = props.images.findIndex(img => img.name === props.currentImage!.name);
+    startIndex = props.images.findIndex(
+      (img) => img.name === props.currentImage!.name,
+    );
   }
-  
-  let targetIndex = props.images.findIndex((img, idx) => idx > startIndex && !img.has_annotation);
-  
+
+  let targetIndex = props.images.findIndex(
+    (img, idx) => idx > startIndex && !img.has_annotation,
+  );
+
   if (targetIndex === -1) {
-    targetIndex = props.images.findIndex(img => !img.has_annotation);
+    targetIndex = props.images.findIndex((img) => !img.has_annotation);
   }
-  
+
   if (targetIndex !== -1 && targetIndex !== startIndex) {
     emit('select-image', props.images[targetIndex]);
     setTimeout(() => {
@@ -127,8 +144,8 @@ const updateDefaultLabelName = (event: Event) => {
 <template>
   <div class="sidebar">
     <div class="section">
-      <button 
-        :class="['mode-btn', 'single-toggle', { active: isEditMode }]" 
+      <button
+        :class="['mode-btn', 'single-toggle', { active: isEditMode }]"
         @click="emit('update:isEditMode', !isEditMode)"
       >
         当前模式: {{ isEditMode ? '编辑' : '创建' }} (点击切换)
@@ -154,17 +171,25 @@ const updateDefaultLabelName = (event: Event) => {
           {{ img.name }} <span v-if="img.has_annotation">✔</span>
         </li>
       </ul>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button class="save-btn" style="flex: 1;" @click="emit('refresh-images')">
+      <div style="display: flex; gap: 0px; margin-top: 0px">
+        <button
+          class="save-btn"
+          style="flex: 1"
+          @click="emit('refresh-images')"
+        >
           刷新列表
         </button>
-        <button class="save-btn" style="flex: 1; background-color: #0d6efd;" @click="jumpToNextUnlabeled">
+        <button
+          class="save-btn"
+          style="flex: 1; background-color: #0d6efd"
+          @click="jumpToNextUnlabeled"
+        >
           下一未标注
         </button>
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" v-if="!isPhone">
       <h3>默认标签</h3>
       <input
         :value="defaultLabelName"
@@ -174,14 +199,16 @@ const updateDefaultLabelName = (event: Event) => {
       />
     </div>
 
-    <div class="section scrollable">
+    <div class="section scrollable polygon-list-section">
       <h3>标注多边形 ({{ shapes.length }})</h3>
       <ul class="polygon-list">
         <li
           v-for="(shape, index) in shapes"
           :key="index"
           :class="{ active: selectedShapeIndex === index }"
-          @click="emit('select-shape', selectedShapeIndex === index ? null : index)"
+          @click="
+            emit('select-shape', selectedShapeIndex === index ? null : index)
+          "
         >
           <div class="shape-info">
             <span
@@ -202,7 +229,9 @@ const updateDefaultLabelName = (event: Event) => {
               @click.stop
             >
               <option :value="shape.label" disabled hidden></option>
-              <option v-for="lbl in uniqueLabels" :key="lbl" :value="lbl">{{ lbl }}</option>
+              <option v-for="lbl in uniqueLabels" :key="lbl" :value="lbl">
+                {{ lbl }}
+              </option>
             </select>
           </div>
           <button class="delete-btn" @click.stop="emit('delete-shape', index)">
@@ -218,14 +247,14 @@ const updateDefaultLabelName = (event: Event) => {
         @click="emit('save-annotations')"
         :disabled="!canSave"
       >
-        保存标注 (JSON)
+        保存标注
       </button>
       <button
         class="delete-json-btn"
         @click="emit('delete-annotations')"
         :disabled="!currentImage?.has_annotation"
       >
-        删除标注 (JSON)
+        删除标注
       </button>
     </div>
   </div>
@@ -303,7 +332,8 @@ ul {
   margin: 0;
 }
 
-.image-list, .polygon-list {
+.image-list,
+.polygon-list {
   overflow-y: auto;
   flex: 1;
 }
@@ -457,12 +487,90 @@ ul {
 }
 
 /* 移动端适配 */
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   .sidebar {
-    width: 100%;
-    height: 35vh;
+    width: 70vh;
+    height: 100%;
     border-right: none;
     border-bottom: 1px solid #dee2e6;
+    padding: 8px;
+    gap: 2px;
+  }
+
+  .save-btn {
+    width: 48%;
+    padding: 4px;
+    height: auto;
+    background-color: #198754;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .actions {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: auto;
+    display: flex;
+  }
+
+  .delete-json-btn {
+    width: 48%;
+    height: auto;
+    padding: 4px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .polygon-list li {
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    font-size: 10px;
+  }
+
+  .shape-info {
+    display: flex;
+    align-items: center;
+  }
+
+  .image-list li {
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    font-size: 10px;
+  }
+
+  .polygon-list-title {
+    font-size: 10px;
+  }
+
+  .section.scrollable {
+    font-size: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .section h3 {
+    margin-top: 3px;
+    margin-bottom: 3px;
+    font-size: 12px;
+  }
+
+  .search-input {
+    margin-bottom: 3px;
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  .single-toggle {
+    margin-bottom: 3px;
+    font-size: 10px;
   }
 }
 </style>

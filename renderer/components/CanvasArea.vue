@@ -438,7 +438,7 @@ watch(
 
 @media (max-width: 768px) {
   .main-content {
-    height: 65vh;
+    height: 100vh;
     padding: 0;
   }
   .toolbar {
