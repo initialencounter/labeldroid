@@ -24,7 +24,7 @@ const emit = defineEmits<{
   (e: 'select-image', img: ImageInfo): void;
   (e: 'refresh-images'): void;
   (e: 'update:defaultLabelName', value: string): void;
-  (e: 'select-shape', index: number): void;
+  (e: 'select-shape', index: number | null): void;
   (e: 'delete-shape', index: number): void;
   (e: 'save-annotations'): void;
   (e: 'shape-label-change'): void;
@@ -69,16 +69,12 @@ const updateDefaultLabelName = (event: Event) => {
 <template>
   <div class="sidebar">
     <div class="section">
-      <div class="mode-toggle">
-        <button 
-          :class="['mode-btn', { active: !isEditMode }]" 
-          @click="emit('update:isEditMode', false)"
-        >创建模式</button>
-        <button 
-          :class="['mode-btn', { active: isEditMode }]" 
-          @click="emit('update:isEditMode', true)"
-        >编辑模式</button>
-      </div>
+      <button 
+        :class="['mode-btn', 'single-toggle', { active: isEditMode }]" 
+        @click="emit('update:isEditMode', !isEditMode)"
+      >
+        当前模式: {{ isEditMode ? '编辑' : '创建' }} (点击切换)
+      </button>
     </div>
 
     <div class="section">
@@ -115,7 +111,7 @@ const updateDefaultLabelName = (event: Event) => {
           v-for="(shape, index) in shapes"
           :key="index"
           :class="{ active: selectedShapeIndex === index }"
-          @click="emit('select-shape', index)"
+          @click="emit('select-shape', selectedShapeIndex === index ? null : index)"
         >
           <div class="shape-info">
             <span
@@ -171,14 +167,13 @@ const updateDefaultLabelName = (event: Event) => {
   z-index: 10;
 }
 
-.mode-toggle {
-  display: flex;
-  gap: 10px;
+.single-toggle {
+  width: 100%;
   margin-bottom: 5px;
+  display: block;
 }
 
 .mode-btn {
-  flex: 1;
   padding: 8px 0;
   border: 1px solid #0d6efd;
   background-color: white;
@@ -186,6 +181,7 @@ const updateDefaultLabelName = (event: Event) => {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .mode-btn.active {

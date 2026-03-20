@@ -64,7 +64,12 @@ const fetchImages = async () => {
   }
 };
 
-const selectShape = (index: number) => {
+const selectShape = (index: number | null) => {
+  if (index === null) {
+    isEditMode.value = false;
+  } else {
+    isEditMode.value = true;
+  }
   selectedShapeIndex.value = index;
 };
 
@@ -221,8 +226,12 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
 
       newScale = Math.max(0.1, Math.min(newScale, 10));
 
-      const dx = (center.x - lastPointerPos.value.x) * (canvasEl.width / canvasEl.clientWidth);
-      const dy = (center.y - lastPointerPos.value.y) * (canvasEl.height / canvasEl.clientHeight);
+      const dx =
+        (center.x - lastPointerPos.value.x) *
+        (canvasEl.width / canvasEl.clientWidth);
+      const dy =
+        (center.y - lastPointerPos.value.y) *
+        (canvasEl.height / canvasEl.clientHeight);
 
       offset.value.x += dx;
       offset.value.y += dy;
@@ -230,7 +239,8 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
       const rect = canvasEl.getBoundingClientRect();
 
       const canvasRelX = (center.x - rect.left) * (canvasEl.width / rect.width);
-      const canvasRelY = (center.y - rect.top) * (canvasEl.height / rect.height);
+      const canvasRelY =
+        (center.y - rect.top) * (canvasEl.height / rect.height);
 
       offset.value.x =
         canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
