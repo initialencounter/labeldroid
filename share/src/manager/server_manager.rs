@@ -6,8 +6,11 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use std::{path::{Path, PathBuf}, sync::atomic::AtomicU64};
 use std::sync::{Arc, Mutex};
+use std::{
+    path::{Path, PathBuf},
+    sync::atomic::AtomicU64,
+};
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::utils::bind_available_port;
@@ -32,6 +35,7 @@ struct Shape {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct LabelmeData {
     version: String,
     flags: serde_json::Value,
@@ -48,7 +52,7 @@ struct ImageInfo {
     has_annotation: bool,
 }
 
-pub static SERVER_PORT: AtomicU64 = AtomicU64::new(3000);
+pub static SERVER_PORT: AtomicU64 = AtomicU64::new(3480);
 
 impl ServerManager {
     pub fn new(workspace_dir: PathBuf, port: u16) -> Self {
@@ -94,6 +98,7 @@ impl ServerManager {
 }
 
 async fn list_images(State(state): State<AppState>) -> Json<Vec<ImageInfo>> {
+    log::info!("Using workspace directory: {:?}", &state.workspace_dir);
     let mut images = Vec::new();
     if let Ok(entries) = std::fs::read_dir(&state.workspace_dir) {
         for entry in entries.flatten() {
@@ -132,7 +137,11 @@ async fn get_image(
             return (StatusCode::OK, bytes).into_response();
         }
     }
-    (StatusCode::NOT_FOUND, "Image not found").into_response()
+    (
+        StatusCode::NOT_FOUND,
+        Json(serde_json::json!({ "ok": false, "result": "Image not found" })),
+    )
+        .into_response()
 }
 
 async fn get_annotation(
@@ -150,7 +159,11 @@ async fn get_annotation(
             }
         }
     }
-    (StatusCode::NOT_FOUND, "Annotation not found").into_response()
+    (
+        StatusCode::NOT_FOUND,
+        Json(serde_json::json!({ "ok": false, "result": "Annotation not found" })),
+    )
+        .into_response()
 }
 
 async fn save_annotation(
@@ -167,15 +180,15 @@ async fn save_annotation(
             if let Err(e) = serde_json::to_writer_pretty(file, &payload) {
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to serialize: {}", e),
+                    Json(serde_json::json!({ "ok": false, "result": format!("Failed to serialize: {}", e) })),
                 )
                     .into_response();
             }
-            (StatusCode::OK, "Saved").into_response()
+            (StatusCode::OK, Json(serde_json::json!({ "ok": true, "result": "Saved" }))).into_response()
         }
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to create file: {}", e),
+            Json(serde_json::json!({ "ok": false, "result": format!("Failed to create file: {}", e) })),
         )
             .into_response(),
     }

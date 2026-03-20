@@ -16,5 +16,8 @@
   "dependencies": {
     "@labeldroid/renderer": "workspace:*"
   },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1"
+  },
   "packageManager": "yarn@4.13.0"
 }

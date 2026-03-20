@@ -5,6 +5,7 @@ mod menu;
 mod utils;
 use crate::command as cmd;
 
+#[cfg(desktop)]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::{Target, TargetKind};
 
@@ -12,13 +13,23 @@ use crate::handle::handle_setup;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_autostart::init(
+    #[cfg(desktop)]
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(not(desktop))]
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
             None,
-        ))
-        .plugin(
+        ));
+    }
+
+    builder.plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info) // 只输出 Info 及以上级别，过滤 Debug
                 .targets([
@@ -36,6 +47,7 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
+            #[cfg(desktop)]
             handle_setup(app);
             apply::apply(app);
             Ok(())
@@ -43,10 +55,13 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             cmd::reload_config,
             cmd::open_local_dir,
-            cmd::open_with_wps,
+            #[cfg(desktop)]
             cmd::minimize_window,
+            #[cfg(desktop)]
             cmd::maximize_window,
+            #[cfg(desktop)]
             cmd::unmaximize_window,
+            #[cfg(desktop)]
             cmd::hide_window,
             cmd::get_server_port,
         ])

@@ -32,7 +32,7 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn default() -> Self {
         ServerConfig {
-            port: 25455,
+            port: 3480,
             debug: true,
             log_enabled: false,
         }

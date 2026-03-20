@@ -1,10 +1,11 @@
-use share::config::ConfigManager;
 use share::manager::server_manager::ServerManager;
 use std::path::PathBuf;
 use tauri::{App, Manager};
 
 pub fn apply(app: &mut App) {
-    let workspace_dir = if let Ok(dir) = app.app_handle().path().download_dir() {
+    let workspace_dir = if let Ok(dir) = app.app_handle().path().document_dir() {
+        #[cfg(desktop)]
+        let dir = dir.join("labeldroid").join("datasets");
         dir
     } else {
         #[cfg(target_os = "android")]
@@ -18,12 +19,11 @@ pub fn apply(app: &mut App) {
 
         fallback_dir
     };
-
+    // log::info!("Using workspace directory: {:?}", workspace_dir);
     if !workspace_dir.exists() {
         std::fs::create_dir_all(&workspace_dir).unwrap_or(());
     }
-    let config = ConfigManager::get_config();
-    let server_manager = ServerManager::new(workspace_dir, config.server.port);
+    let server_manager = ServerManager::new(workspace_dir, 3480);
     server_manager.start();
     app.manage(server_manager);
 }

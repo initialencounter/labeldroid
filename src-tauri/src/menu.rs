@@ -1,6 +1,9 @@
+#[cfg(desktop)]
 use tauri::menu::{MenuItem, MenuItemBuilder};
+#[cfg(desktop)]
 use tauri::{App, Wry};
 
+#[cfg(desktop)]
 pub fn create_menu_item(app: &mut App) -> [MenuItem<Wry>; 5] {
     let help_ = MenuItemBuilder::new("帮助(H)")
         .id("help")

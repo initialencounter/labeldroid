@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { debug } from '@tauri-apps/plugin-log';
+import { ElMessage } from 'element-plus';
 import Sidebar from './components/Sidebar.vue';
 import CanvasArea from './components/CanvasArea.vue';
 import type { ImageInfo, Shape, LabelmeData } from './types';
 import TitleBar from './components/TitleBar.vue';
-
-const SERVER_URL = 'http://localhost:3000';
+import { apiManager } from './utils/api';
 
 const images = ref<ImageInfo[]>([]);
 const currentImage = ref<ImageInfo | null>(null);
@@ -54,10 +53,7 @@ const handleCanvasReady = (canvas: HTMLCanvasElement) => {
 
 const fetchImages = async () => {
   try {
-    const res = await fetch(`${SERVER_URL}/api/images`);
-    const data = await res.json();
-    console.info('c Fetched images list:', data.length);
-    debug('d Fetched images list:', data);
+    const data = await apiManager.get('/api/images');
     images.value = data;
     if (data.length > 0 && !currentImage.value) {
       selectImage(data[0]);
@@ -336,18 +332,15 @@ const selectImage = async (img: ImageInfo) => {
 
     if (img.has_annotation) {
       try {
-        const res = await fetch(`${SERVER_URL}/api/annotations/${img.name}`);
-        if (res.ok) {
-          const jsonData: LabelmeData = await res.json();
-          shapes.value = jsonData.shapes || [];
-        }
+        const res: LabelmeData = await apiManager.get(`/api/annotations/${img.name}`);
+        shapes.value = res.shapes || [];
       } catch (err) {
         console.error('No valid annotation data');
       }
     }
   };
 
-  htmlImage.src = `${SERVER_URL}/api/images/${img.name}?t=${Date.now()}`;
+  htmlImage.src = `http://127.0.0.1:${apiManager.serverPort}/api/images/${img.name}?t=${Date.now()}`;
 };
 
 const saveAnnotationsSilently = async () => {
@@ -369,14 +362,11 @@ const saveAnnotationsSilently = async () => {
   }
 
   try {
-    const res = await fetch(
-      `${SERVER_URL}/api/annotations/${currentImage.value.name}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      },
+    const res = await apiManager.post(
+      `/api/annotations/${currentImage.value.name}`,
+      payload,
     );
+    console.info('Auto-saving annotation for image:', res);
     if (res.ok) {
       await fetchImages();
     }
@@ -403,25 +393,21 @@ const saveAnnotations = async () => {
     return
   }
 
-  console.info('Saving annotation for image:', currentImage.value.name, 'with shapes count:', shapes.value.length);
   try {
-    const res = await fetch(
-      `${SERVER_URL}/api/annotations/${currentImage.value.name}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      },
+    const res = await apiManager.post(
+      `/api/annotations/${currentImage.value.name}`,
+      payload,
     );
+    console.info('Save response:', res);
     if (res.ok) {
-      alert('保存成功!');
+      ElMessage.success('保存成功!');
       await fetchImages();
     } else {
-      alert('保存失败');
+      ElMessage.error('保存失败');
     }
   } catch (error) {
     console.error(error);
-    alert('保存错误');
+    ElMessage.error('保存错误');
   }
 };
 

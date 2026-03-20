@@ -36,6 +36,7 @@ pub fn check_update(flag: String) -> String {
     release.tag_name
 }
 
+#[cfg(desktop)]
 pub fn hide_or_show(window: WebviewWindow) {
     if window.is_visible().unwrap_or_default() {
         if window.is_minimized().unwrap_or_default() {

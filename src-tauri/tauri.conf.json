@@ -17,7 +17,6 @@
         "height": 600,
         "resizable": true,
         "label": "main",
-        "visible": false,
         "dragDropEnabled": false,
         "decorations": false
       }

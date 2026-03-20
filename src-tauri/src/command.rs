@@ -1,9 +1,12 @@
 use labeldroid_types::config::Config;
 use share::manager::server_manager::SERVER_PORT;
-use std::path::Path;
+#[cfg(desktop)]
 use tauri::Manager;
+
+#[cfg(desktop)]
 use tauri_plugin_autostart::ManagerExt;
 
+#[cfg(desktop)]
 pub fn set_auto_start(app: tauri::AppHandle, auto_start: bool) -> Result<(), String> {
     let autostart_manager = app.autolaunch();
     if auto_start {
@@ -19,30 +22,28 @@ pub fn open_local_dir(target: &str) {
     share::utils::fs::open_local_dir(target);
 }
 
-#[tauri::command]
-pub fn open_with_wps(target: &str, name: &str) {
-    let file_path = Path::new(target).join(Path::new(name));
-    let _ = std::process::Command::new("wps").arg(file_path).spawn();
-}
-
+#[cfg(desktop)]
 #[tauri::command]
 pub fn minimize_window(app: tauri::AppHandle) {
     let window = app.get_webview_window("main").unwrap();
     window.minimize().unwrap();
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 pub fn hide_window(app: tauri::AppHandle) {
     let window = app.get_webview_window("main").unwrap();
     window.hide().unwrap();
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 pub fn maximize_window(app: tauri::AppHandle) {
     let window = app.get_webview_window("main").unwrap();
     window.maximize().unwrap();
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 pub fn unmaximize_window(app: tauri::AppHandle) {
     let window = app.get_webview_window("main").unwrap();
