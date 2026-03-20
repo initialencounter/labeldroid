@@ -166,6 +166,7 @@ const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
       const points = Array.from(activePointers.value.values());
       initialDistance.value = getDistance(points[0], points[1]);
       initialScale.value = scale.value;
+      lastPointerPos.value = getCenter(points[0], points[1]);
     }
   }
 };
@@ -213,24 +214,30 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
     if (activePointers.value.size === 2 && initialDistance.value !== null) {
       const points = Array.from(activePointers.value.values());
       const newDistance = getDistance(points[0], points[1]);
+      const center = getCenter(points[0], points[1]);
 
       const scaleRatio = newDistance / initialDistance.value;
       let newScale = initialScale.value * scaleRatio;
 
       newScale = Math.max(0.1, Math.min(newScale, 10));
 
-      const center = getCenter(points[0], points[1]);
+      const dx = (center.x - lastPointerPos.value.x) * (canvasEl.width / canvasEl.clientWidth);
+      const dy = (center.y - lastPointerPos.value.y) * (canvasEl.height / canvasEl.clientHeight);
+
+      offset.value.x += dx;
+      offset.value.y += dy;
+
       const rect = canvasEl.getBoundingClientRect();
 
       const canvasRelX = (center.x - rect.left) * (canvasEl.width / rect.width);
-      const canvasRelY =
-        (center.y - rect.top) * (canvasEl.height / rect.height);
+      const canvasRelY = (center.y - rect.top) * (canvasEl.height / rect.height);
 
       offset.value.x =
         canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
       offset.value.y =
         canvasRelY - (canvasRelY - offset.value.y) * (newScale / scale.value);
       scale.value = newScale;
+      lastPointerPos.value = center;
       return;
     }
 
