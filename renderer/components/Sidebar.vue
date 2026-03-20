@@ -82,6 +82,31 @@ const getVocColormap = () => {
 
 const vocColormap = getVocColormap();
 
+const jumpToNextUnlabeled = () => {
+  if (props.images.length === 0) return;
+  
+  let startIndex = 0;
+  if (props.currentImage) {
+    startIndex = props.images.findIndex(img => img.name === props.currentImage!.name);
+  }
+  
+  let targetIndex = props.images.findIndex((img, idx) => idx > startIndex && !img.has_annotation);
+  
+  if (targetIndex === -1) {
+    targetIndex = props.images.findIndex(img => !img.has_annotation);
+  }
+  
+  if (targetIndex !== -1 && targetIndex !== startIndex) {
+    emit('select-image', props.images[targetIndex]);
+    setTimeout(() => {
+      const el = document.getElementById('img-item-' + targetIndex);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  }
+};
+
 const getColorByLabel = (label: string) => {
   const labelsArray = uniqueLabels.value;
   let index = labelsArray.indexOf(label);
@@ -129,9 +154,14 @@ const updateDefaultLabelName = (event: Event) => {
           {{ img.name }} <span v-if="img.has_annotation">✔</span>
         </li>
       </ul>
-      <button class="save-btn" style="margin-top: 10px" @click="emit('refresh-images')">
-        刷新列表
-      </button>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="save-btn" style="flex: 1;" @click="emit('refresh-images')">
+          刷新列表
+        </button>
+        <button class="save-btn" style="flex: 1; background-color: #0d6efd;" @click="jumpToNextUnlabeled">
+          下一未标注
+        </button>
+      </div>
     </div>
 
     <div class="section">
