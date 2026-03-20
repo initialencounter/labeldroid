@@ -26,12 +26,14 @@ const canvasAreaRef = ref<InstanceType<typeof CanvasArea> | null>(null);
 
 // ======== 模式切换 ========
 const isEditMode = ref(false);
-const draggingPoint = ref<{ shapeIndex: number; pointIndex: number } | null>(null);
+const draggingPoint = ref<{ shapeIndex: number; pointIndex: number } | null>(
+  null,
+);
 
 watch(isEditMode, (newVal) => {
-    if (newVal && currentPolygon.value.length > 0) {
-        cancelCurrentPolygon();
-    }
+  if (newVal && currentPolygon.value.length > 0) {
+    cancelCurrentPolygon();
+  }
 });
 
 // 缩放和平移状态
@@ -40,11 +42,11 @@ const offset = ref({ x: 0, y: 0 });
 
 // 交互状态
 const isDragging = ref(false);
-const isZoomingOrPinching = ref(false); 
+const isZoomingOrPinching = ref(false);
 const lastPointerPos = ref({ x: 0, y: 0 });
 const initialDistance = ref<number | null>(null);
 const initialScale = ref<number>(1);
-const activePointers = ref<Map<number, {x: number, y: number}>>(new Map());
+const activePointers = ref<Map<number, { x: number; y: number }>>(new Map());
 
 const handleCanvasReady = (canvas: HTMLCanvasElement) => {
   canvasEl = canvas;
@@ -77,7 +79,7 @@ const getCanvasPos = (clientX: number, clientY: number) => {
   const canvas = canvasEl;
   if (!canvas) return { x: 0, y: 0 };
   const rect = canvas.getBoundingClientRect();
-  
+
   const basicX = (clientX - rect.left) * (canvas.width / rect.width);
   const basicY = (clientY - rect.top) * (canvas.height / rect.height);
 
@@ -87,12 +89,18 @@ const getCanvasPos = (clientX: number, clientY: number) => {
   };
 };
 
-const getDistance = (p1: {x: number, y: number}, p2: {x: number, y: number}) => {
-    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+const getDistance = (
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+) => {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 };
 
-const getCenter = (p1: {x: number, y: number}, p2: {x: number, y: number}) => {
-    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+const getCenter = (
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+) => {
+  return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
 };
 
 const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
@@ -104,156 +112,176 @@ const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
   if (!currentImage.value || !canvasEl) return;
 
   if (window.PointerEvent && e instanceof PointerEvent) {
-      activePointers.value.set(e.pointerId, {x: e.clientX, y: e.clientY});
-      
-      if (activePointers.value.size === 1) {
-          if (e.button === 1 || e.shiftKey) {
-             isDragging.value = true;
-             lastPointerPos.value = { x: e.clientX, y: e.clientY };
-             return;
-          }
-          
-          if (isZoomingOrPinching.value) {
-              return;
-          }
-          
-          const pos = getCanvasPos(e.clientX, e.clientY);
-          
-          if (isEditMode.value) {
-              // 寻找最近的点
-              const threshold = 15 / scale.value; // 点击容差，按缩放比例动态调整视觉容差
-              let minDist = Infinity;
-              let sIdx = -1;
-              let pIdx = -1;
+    activePointers.value.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-              shapes.value.forEach((shape, i) => {
-                  shape.points.forEach((point, j) => {
-                      const dist = getDistance(pos, { x: point[0], y: point[1] });
-                      if (dist < minDist && dist <= threshold) {
-                          minDist = dist;
-                          sIdx = i;
-                          pIdx = j;
-                      }
-                  });
-              });
-
-              if (sIdx !== -1 && pIdx !== -1) {
-                  draggingPoint.value = { shapeIndex: sIdx, pointIndex: pIdx };
-                  selectedShapeIndex.value = sIdx;
-              } else {
-                  draggingPoint.value = null; // 点击空白处
-              }
-          } else {
-              currentPolygon.value.push(pos);
-          }
-      } 
-      else if (activePointers.value.size === 2) {
-          isZoomingOrPinching.value = true;
-          isDragging.value = false;
-          draggingPoint.value = null;
-          
-          if (!isEditMode.value && currentPolygon.value.length > 0) {
-              currentPolygon.value.pop();
-          }
-
-          const points = Array.from(activePointers.value.values());
-          initialDistance.value = getDistance(points[0], points[1]);
-          initialScale.value = scale.value;
+    if (activePointers.value.size === 1) {
+      if (e.button === 1 || e.shiftKey) {
+        isDragging.value = true;
+        lastPointerPos.value = { x: e.clientX, y: e.clientY };
+        return;
       }
+
+      if (isZoomingOrPinching.value) {
+        return;
+      }
+
+      const pos = getCanvasPos(e.clientX, e.clientY);
+
+      if (isEditMode.value) {
+        // 寻找最近的点
+        const threshold = 15 / scale.value; // 点击容差，按缩放比例动态调整视觉容差
+        let minDist = Infinity;
+        let sIdx = -1;
+        let pIdx = -1;
+
+        shapes.value.forEach((shape, i) => {
+          shape.points.forEach((point, j) => {
+            const dist = getDistance(pos, { x: point[0], y: point[1] });
+            if (dist < minDist && dist <= threshold) {
+              minDist = dist;
+              sIdx = i;
+              pIdx = j;
+            }
+          });
+        });
+
+        if (sIdx !== -1 && pIdx !== -1) {
+          draggingPoint.value = { shapeIndex: sIdx, pointIndex: pIdx };
+          selectedShapeIndex.value = sIdx;
+        } else {
+          draggingPoint.value = null; // 点击空白处
+        }
+      } else {
+        currentPolygon.value.push(pos);
+      }
+    } else if (activePointers.value.size === 2) {
+      isZoomingOrPinching.value = true;
+      isDragging.value = false;
+      draggingPoint.value = null;
+
+      if (!isEditMode.value && currentPolygon.value.length > 0) {
+        currentPolygon.value.pop();
+      }
+
+      const points = Array.from(activePointers.value.values());
+      initialDistance.value = getDistance(points[0], points[1]);
+      initialScale.value = scale.value;
+    }
   }
 };
 
 const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
   if (!currentImage.value || !canvasEl) return;
-  
-   if (window.PointerEvent && e instanceof PointerEvent) {
-      if (activePointers.value.has(e.pointerId)) {
-          activePointers.value.set(e.pointerId, {x: e.clientX, y: e.clientY});
+
+  if (window.PointerEvent && e instanceof PointerEvent) {
+    if (activePointers.value.has(e.pointerId)) {
+      activePointers.value.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (activePointers.value.size === 1) {
+      if (isDragging.value) {
+        // 拖拽平移画布
+        const dx =
+          (e.clientX - lastPointerPos.value.x) *
+          (canvasEl.width / canvasEl.clientWidth);
+        const dy =
+          (e.clientY - lastPointerPos.value.y) *
+          (canvasEl.height / canvasEl.clientHeight);
+
+        offset.value.x += dx;
+        offset.value.y += dy;
+
+        lastPointerPos.value = { x: e.clientX, y: e.clientY };
+        return;
       }
 
-      if (activePointers.value.size === 1) {
-          if (isDragging.value) { // 拖拽平移画布
-              const dx = (e.clientX - lastPointerPos.value.x) * (canvasEl.width / canvasEl.clientWidth);
-              const dy = (e.clientY - lastPointerPos.value.y) * (canvasEl.height / canvasEl.clientHeight);
-              
-              offset.value.x += dx;
-              offset.value.y += dy;
-              
-              lastPointerPos.value = { x: e.clientX, y: e.clientY };
-              return;
-          }
-          
-          if (isEditMode.value && draggingPoint.value !== null) { // 编辑点
-              const pos = getCanvasPos(e.clientX, e.clientY);
-              const { shapeIndex, pointIndex } = draggingPoint.value;
-              shapes.value[shapeIndex].points[pointIndex] = [Math.round(pos.x), Math.round(pos.y)];
-              return;
-          }
+      if (isEditMode.value && draggingPoint.value !== null) {
+        // 编辑点
+        // 移动设备下，将点向上偏移，避免手指遮挡
+        const offsetY = e.pointerType === 'touch' ? -50 : 0;
+        const offsetX = e.pointerType === 'touch' ? -50 : 0;
+        const pos = getCanvasPos(e.clientX + offsetX, e.clientY + offsetY);
+        const { shapeIndex, pointIndex } = draggingPoint.value;
+        shapes.value[shapeIndex].points[pointIndex] = [
+          Math.round(pos.x),
+          Math.round(pos.y),
+        ];
+        return;
       }
-      
-      if (activePointers.value.size === 2 && initialDistance.value !== null) {
-           const points = Array.from(activePointers.value.values());
-           const newDistance = getDistance(points[0], points[1]);
-           
-           const scaleRatio = newDistance / initialDistance.value;
-           let newScale = initialScale.value * scaleRatio;
-           
-           newScale = Math.max(0.1, Math.min(newScale, 10));
-           
-           const center = getCenter(points[0], points[1]);
-           const rect = canvasEl.getBoundingClientRect();
-           
-           const canvasRelX = (center.x - rect.left) * (canvasEl.width / rect.width);
-           const canvasRelY = (center.y - rect.top) * (canvasEl.height / rect.height);
-           
-           offset.value.x = canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
-           offset.value.y = canvasRelY - (canvasRelY - offset.value.y) * (newScale / scale.value);
-           scale.value = newScale;
-           return;
-      }
+    }
 
-      if (activePointers.value.size <= 1 && !isDragging.value && !isZoomingOrPinching.value) {
-          mousePos.value = getCanvasPos(e.clientX, e.clientY);
-      } else {
-          mousePos.value = null; // 隐藏准星
-      }
-   }
+    if (activePointers.value.size === 2 && initialDistance.value !== null) {
+      const points = Array.from(activePointers.value.values());
+      const newDistance = getDistance(points[0], points[1]);
+
+      const scaleRatio = newDistance / initialDistance.value;
+      let newScale = initialScale.value * scaleRatio;
+
+      newScale = Math.max(0.1, Math.min(newScale, 10));
+
+      const center = getCenter(points[0], points[1]);
+      const rect = canvasEl.getBoundingClientRect();
+
+      const canvasRelX = (center.x - rect.left) * (canvasEl.width / rect.width);
+      const canvasRelY =
+        (center.y - rect.top) * (canvasEl.height / rect.height);
+
+      offset.value.x =
+        canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
+      offset.value.y =
+        canvasRelY - (canvasRelY - offset.value.y) * (newScale / scale.value);
+      scale.value = newScale;
+      return;
+    }
+
+    if (
+      activePointers.value.size <= 1 &&
+      !isDragging.value &&
+      !isZoomingOrPinching.value
+    ) {
+      mousePos.value = getCanvasPos(e.clientX, e.clientY);
+    } else {
+      mousePos.value = null; // 隐藏准星
+    }
+  }
 };
 
 const handlePointerUp = (e: PointerEvent | MouseEvent | TouchEvent) => {
-    if (window.PointerEvent && e instanceof PointerEvent) {
-        activePointers.value.delete(e.pointerId);
-        
-        if (activePointers.value.size < 2) {
-            initialDistance.value = null;
-        }
-        if (activePointers.value.size === 0) {
-            isDragging.value = false;
-            draggingPoint.value = null;
-            setTimeout(() => {
-                 isZoomingOrPinching.value = false;
-            }, 50); 
-        }
+  if (window.PointerEvent && e instanceof PointerEvent) {
+    activePointers.value.delete(e.pointerId);
+
+    if (activePointers.value.size < 2) {
+      initialDistance.value = null;
     }
+    if (activePointers.value.size === 0) {
+      isDragging.value = false;
+      draggingPoint.value = null;
+      setTimeout(() => {
+        isZoomingOrPinching.value = false;
+      }, 50);
+    }
+  }
 };
 
 const handleWheel = (e: WheelEvent) => {
-    if (!currentImage.value || !canvasEl) return;
-    
-    const zoomFactor = 1.1;
-    const direction = e.deltaY < 0 ? 1 : -1;
-    let newScale = scale.value * (direction > 0 ? zoomFactor : 1 / zoomFactor);
-    
-    newScale = Math.max(0.1, Math.min(newScale, 10));
-    
-    const rect = canvasEl.getBoundingClientRect();
-    const canvasRelX = (e.clientX - rect.left) * (canvasEl.width / rect.width);
-    const canvasRelY = (e.clientY - rect.top) * (canvasEl.height / rect.height);
-    
-    offset.value.x = canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
-    offset.value.y = canvasRelY - (canvasRelY - offset.value.y) * (newScale / scale.value);
-    
-    scale.value = newScale;
+  if (!currentImage.value || !canvasEl) return;
+
+  const zoomFactor = 1.1;
+  const direction = e.deltaY < 0 ? 1 : -1;
+  let newScale = scale.value * (direction > 0 ? zoomFactor : 1 / zoomFactor);
+
+  newScale = Math.max(0.1, Math.min(newScale, 10));
+
+  const rect = canvasEl.getBoundingClientRect();
+  const canvasRelX = (e.clientX - rect.left) * (canvasEl.width / rect.width);
+  const canvasRelY = (e.clientY - rect.top) * (canvasEl.height / rect.height);
+
+  offset.value.x =
+    canvasRelX - (canvasRelX - offset.value.x) * (newScale / scale.value);
+  offset.value.y =
+    canvasRelY - (canvasRelY - offset.value.y) * (newScale / scale.value);
+
+  scale.value = newScale;
 };
 
 const finishCurrentPolygon = () => {
@@ -282,36 +310,36 @@ const cancelCurrentPolygon = () => {
 const handleRightClick = (e: Event) => {
   e.preventDefault();
   if (!isEditMode.value) {
-     finishCurrentPolygon();
+    finishCurrentPolygon();
   }
 };
 
 const fitImageToCanvas = () => {
-    if (!canvasEl || !htmlImage.complete) return;
-    
-    const container = canvasEl.parentElement;
-    if (container) {
-        canvasEl.width = container.clientWidth;
-        canvasEl.height = container.clientHeight;
-    }
-    
-    const scaleX = canvasEl.width / htmlImage.width;
-    const scaleY = canvasEl.height / htmlImage.height;
-    let bestScale = Math.min(scaleX, scaleY) * 0.9;
-    
-    if (isNaN(bestScale) || !isFinite(bestScale)) bestScale = 1;
-    
-    scale.value = bestScale;
-    
-    offset.value = {
-        x: (canvasEl.width - htmlImage.width * bestScale) / 2,
-        y: (canvasEl.height - htmlImage.height * bestScale) / 2
-    };
+  if (!canvasEl || !htmlImage.complete) return;
+
+  const container = canvasEl.parentElement;
+  if (container) {
+    canvasEl.width = container.clientWidth;
+    canvasEl.height = container.clientHeight;
+  }
+
+  const scaleX = canvasEl.width / htmlImage.width;
+  const scaleY = canvasEl.height / htmlImage.height;
+  let bestScale = Math.min(scaleX, scaleY) * 0.9;
+
+  if (isNaN(bestScale) || !isFinite(bestScale)) bestScale = 1;
+
+  scale.value = bestScale;
+
+  offset.value = {
+    x: (canvasEl.width - htmlImage.width * bestScale) / 2,
+    y: (canvasEl.height - htmlImage.height * bestScale) / 2,
+  };
 };
 
 const selectImage = async (img: ImageInfo) => {
   if (currentImage.value && currentImage.value.name !== img.name) {
-     await saveAnnotationsSilently();
+    await saveAnnotationsSilently();
   }
 
   currentImage.value = img;
@@ -325,13 +353,15 @@ const selectImage = async (img: ImageInfo) => {
   htmlImage.onload = async () => {
     imgWidth = htmlImage.width;
     imgHeight = htmlImage.height;
-    
+
     fitImageToCanvas();
     hasImageContent.value = true;
 
     if (img.has_annotation) {
       try {
-        const res: LabelmeData = await apiManager.get(`/api/annotations/${img.name}`);
+        const res: LabelmeData = await apiManager.get(
+          `/api/annotations/${img.name}`,
+        );
         shapes.value = res.shapes || [];
       } catch (err) {
         console.error('No valid annotation data');
@@ -343,7 +373,7 @@ const selectImage = async (img: ImageInfo) => {
 };
 
 const saveAnnotationsSilently = async () => {
-   if (!currentImage.value) return;
+  if (!currentImage.value) return;
 
   const payload: LabelmeData = {
     version: '5.4.1',
@@ -357,7 +387,7 @@ const saveAnnotationsSilently = async () => {
 
   if (shapes.value.length === 0) {
     console.info('No shapes to save, skipping annotation save.');
-    return
+    return;
   }
 
   try {
@@ -370,7 +400,7 @@ const saveAnnotationsSilently = async () => {
       await fetchImages();
     }
   } catch (error) {
-    console.error("Auto save failed:", error);
+    console.error('Auto save failed:', error);
   }
 };
 
@@ -389,7 +419,7 @@ const saveAnnotations = async () => {
 
   if (shapes.value.length === 0) {
     console.info('No shapes to save, skipping annotation save.');
-    return
+    return;
   }
 
   try {
@@ -413,10 +443,10 @@ const saveAnnotations = async () => {
 onMounted(() => {
   fetchImages();
   window.addEventListener('resize', () => {
-      if (hasImageContent.value) {
-          fitImageToCanvas();
-          canvasAreaRef.value?.draw();
-      }
+    if (hasImageContent.value) {
+      fitImageToCanvas();
+      canvasAreaRef.value?.draw();
+    }
   });
 });
 </script>
@@ -440,7 +470,7 @@ onMounted(() => {
       @save-annotations="saveAnnotations"
       @shape-label-change="canvasAreaRef?.draw()"
     />
-    
+
     <CanvasArea
       ref="canvasAreaRef"
       :isEditMode="isEditMode"
