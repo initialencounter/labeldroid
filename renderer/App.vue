@@ -412,7 +412,6 @@ const saveAnnotationsSilently = async () => {
       `/api/annotations/${currentImage.value.name}`,
       payload,
     );
-    console.info('Auto-saving annotation for image:', res);
     if (res.ok) {
       await fetchImages();
     }
