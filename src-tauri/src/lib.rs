@@ -55,14 +55,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             cmd::reload_config,
             cmd::open_local_dir,
-            #[cfg(desktop)]
-            cmd::minimize_window,
-            #[cfg(desktop)]
-            cmd::maximize_window,
-            #[cfg(desktop)]
-            cmd::unmaximize_window,
-            #[cfg(desktop)]
-            cmd::hide_window,
             cmd::get_server_port,
         ])
         .run(tauri::generate_context!())

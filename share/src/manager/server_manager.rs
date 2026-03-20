@@ -98,7 +98,7 @@ impl ServerManager {
 }
 
 async fn list_images(State(state): State<AppState>) -> Json<Vec<ImageInfo>> {
-    log::info!("Using workspace directory: {:?}", &state.workspace_dir);
+    // log::info!("Using workspace directory: {:?}", &state.workspace_dir);
     let mut images = Vec::new();
     if let Ok(entries) = std::fs::read_dir(&state.workspace_dir) {
         for entry in entries.flatten() {

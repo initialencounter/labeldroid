@@ -1,8 +1,8 @@
 #[cfg(desktop)]
 use crate::menu;
+use crate::utils::check_update;
 #[cfg(desktop)]
 use crate::utils::{hide_or_show, restart};
-use crate::utils::check_update;
 use serde::Serialize;
 use std::env;
 #[cfg(desktop)]
@@ -60,28 +60,27 @@ pub fn handle_menu_event_update(app: &AppHandle<Wry>) {
     }
 }
 
+#[cfg(desktop)]
 pub fn handle_setup(app: &mut App) {
-    #[cfg(desktop)]
-    {
-        let [help_, quit, about, update, restart_] = menu::create_menu_item(app);
-        let tray_menu = MenuBuilder::new(app)
-            .items(&[
-                &help_,
-                &about,
-                &update,
-                &PredefinedMenuItem::separator(app).unwrap(),
-                &restart_,
-                &PredefinedMenuItem::separator(app).unwrap(),
-                &quit,
-            ]) // insert the menu items here
-            .build()
-            .unwrap();
-        let _ = TrayIconBuilder::with_id("system-tray-1")
-            .icon(app.default_window_icon().unwrap().clone())
-            .menu(&tray_menu)
-            .show_menu_on_left_click(false)
-            .on_menu_event(move |app, event| {
-                match event.id().as_ref() {
+    let [help_, quit, about, update, restart_] = menu::create_menu_item(app);
+    let tray_menu = MenuBuilder::new(app)
+        .items(&[
+            &help_,
+            &about,
+            &update,
+            &PredefinedMenuItem::separator(app).unwrap(),
+            &restart_,
+            &PredefinedMenuItem::separator(app).unwrap(),
+            &quit,
+        ]) // insert the menu items here
+        .build()
+        .unwrap();
+    let _ = TrayIconBuilder::with_id("system-tray-1")
+        .icon(app.default_window_icon().unwrap().clone())
+        .menu(&tray_menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(move |app, event| {
+            match event.id().as_ref() {
         "help" => app
             .emit(
             "open_link",
@@ -104,19 +103,17 @@ pub fn handle_setup(app: &mut App) {
         "update" => handle_menu_event_update(&app),
         _ => {}
         }
-            })
-            .on_tray_icon_event(|tray, event| {
-                handle_tray_icon_event(tray, &event);
-            })
-            .build(app)
-            .unwrap();
-    }
+        })
+        .on_tray_icon_event(|tray, event| {
+            handle_tray_icon_event(tray, &event);
+        })
+        .build(app)
+        .unwrap();
     let window = app.get_webview_window("main").unwrap();
     let window_clone = window.clone();
     window.on_window_event(move |event| {
         if let WindowEvent::CloseRequested { api, .. } = event {
             api.prevent_close();
-            #[cfg(desktop)]
             window_clone.hide().unwrap();
         }
     });

@@ -1,9 +1,6 @@
 use labeldroid_types::config::Config;
 use share::manager::server_manager::SERVER_PORT;
 #[cfg(desktop)]
-use tauri::Manager;
-
-#[cfg(desktop)]
 use tauri_plugin_autostart::ManagerExt;
 
 #[cfg(desktop)]
@@ -19,40 +16,16 @@ pub fn set_auto_start(app: tauri::AppHandle, auto_start: bool) -> Result<(), Str
 
 #[tauri::command]
 pub fn open_local_dir(target: &str) {
-    share::utils::fs::open_local_dir(target);
-}
-
-#[cfg(desktop)]
-#[tauri::command]
-pub fn minimize_window(app: tauri::AppHandle) {
-    let window = app.get_webview_window("main").unwrap();
-    window.minimize().unwrap();
-}
-
-#[cfg(desktop)]
-#[tauri::command]
-pub fn hide_window(app: tauri::AppHandle) {
-    let window = app.get_webview_window("main").unwrap();
-    window.hide().unwrap();
-}
-
-#[cfg(desktop)]
-#[tauri::command]
-pub fn maximize_window(app: tauri::AppHandle) {
-    let window = app.get_webview_window("main").unwrap();
-    window.maximize().unwrap();
-}
-
-#[cfg(desktop)]
-#[tauri::command]
-pub fn unmaximize_window(app: tauri::AppHandle) {
-    let window = app.get_webview_window("main").unwrap();
-    window.unmaximize().unwrap();
+    #[cfg(desktop)]
+    {
+        share::utils::fs::open_local_dir(target);
+    }
 }
 
 // 保存配置, 并重启服务器
 #[tauri::command]
 pub async fn reload_config(app: tauri::AppHandle, config: Config) -> Result<(), String> {
+    #[cfg(desktop)]
     set_auto_start(app.clone(), config.base.auto_start)?;
     Ok(())
 }
