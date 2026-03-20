@@ -277,8 +277,9 @@ ul {
 }
 
 .inline-select {
-  width: 20px;
+  width: 24px;
   padding: 4px 0;
+  color: transparent;
   border: 1px solid #ddd;
   border-radius: 3px;
   background-color: white;
@@ -288,6 +289,10 @@ ul {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 14px;
+}
+
+.inline-select option {
+  color: #000;
 }
 
 .inline-select:focus {
