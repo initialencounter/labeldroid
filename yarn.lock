@@ -3086,6 +3086,7 @@ __metadata:
   dependencies:
     "@labeldroid/renderer": "workspace:*"
     "@tauri-apps/cli": "npm:^2.10.1"
+    vue-tsc: "npm:^3.2.6"
   languageName: unknown
   linkType: soft
 

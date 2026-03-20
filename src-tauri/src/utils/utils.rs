@@ -1,17 +1,23 @@
+#[cfg(desktop)]
 use reqwest;
+#[cfg(desktop)]
 use serde::Deserialize;
+#[cfg(desktop)]
 use tauri::{self, WebviewWindow};
 
+#[cfg(desktop)]
 #[derive(Deserialize)]
 struct Release {
     tag_name: String,
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 pub fn restart() {
     tauri::process::restart(&tauri::Env::default())
 }
 
+#[cfg(desktop)]
 pub fn check_update(flag: String) -> String {
     let url = "https://api.github.com/repos/initialencounter/labeldroid/releases/latest";
     let client = reqwest::blocking::Client::new();

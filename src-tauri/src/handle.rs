@@ -1,17 +1,23 @@
 #[cfg(desktop)]
 use crate::menu;
+#[cfg(desktop)]
 use crate::utils::check_update;
 #[cfg(desktop)]
 use crate::utils::{hide_or_show, restart};
+#[cfg(desktop)]
 use serde::Serialize;
+#[cfg(desktop)]
 use std::env;
 #[cfg(desktop)]
 use tauri::menu::{MenuBuilder, PredefinedMenuItem};
 #[cfg(desktop)]
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
+#[cfg(desktop)]
 use tauri::{App, AppHandle, Emitter, Manager, WindowEvent, Wry};
+#[cfg(desktop)]
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
+#[cfg(desktop)]
 #[derive(Serialize, Clone)]
 pub struct Link {
     link: String,
@@ -32,6 +38,7 @@ pub fn handle_tray_icon_event(tray: &TrayIcon, event: &TrayIconEvent) {
     }
 }
 
+#[cfg(desktop)]
 pub fn handle_menu_event_update(app: &AppHandle<Wry>) {
     let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
     let latest = check_update(String::from("000"));

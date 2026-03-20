@@ -11,13 +11,15 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
+    "sign": "C:/Users/29115/AppData/Local/Android/Sdk/build-tools/36.1.0/apksigner.bat sign --ks C:/Users/29115/.android/debug.keystore --ks-pass pass:android",
     "tauri": "tauri"
   },
   "dependencies": {
     "@labeldroid/renderer": "workspace:*"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.1"
+    "@tauri-apps/cli": "^2.10.1",
+    "vue-tsc": "^3.2.6"
   },
   "packageManager": "yarn@4.13.0"
 }

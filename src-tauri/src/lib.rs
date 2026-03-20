@@ -54,7 +54,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            cmd::reload_config,
+            #[cfg(desktop)]
             cmd::open_local_dir,
             cmd::get_server_port,
         ])
