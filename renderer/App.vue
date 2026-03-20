@@ -212,7 +212,7 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
            return;
       }
 
-      if (activePointers.value.size <= 1 && !isDragging.value && !isZoomingOrPinching.value && !isEditMode.value) {
+      if (activePointers.value.size <= 1 && !isDragging.value && !isZoomingOrPinching.value) {
           mousePos.value = getCanvasPos(e.clientX, e.clientY);
       } else {
           mousePos.value = null; // 隐藏准星

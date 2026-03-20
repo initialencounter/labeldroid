@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, ComputedRef } from 'vue';
 import type { Shape } from '../types';
 
 const props = defineProps<{
@@ -33,10 +33,40 @@ const STROKE_WIDTH_SELECTED = 2;
 const POINT_RADIUS = 1.5;
 const POINT_RADIUS_SELECTED = 2.5;
 
+const hoveredPoint: ComputedRef<{
+  shapeIndex: number;
+  pointIndex: number;
+} | null> = computed(() => {
+  if (!props.isEditMode || !props.mousePos) return null;
+  const pos = props.mousePos;
+  const threshold = 15 / props.scale;
+  let minDist = Infinity;
+  let result: { shapeIndex: number; pointIndex: number } | null = null;
+
+  props.shapes.forEach((shape, i) => {
+    shape.points.forEach((point, j) => {
+      const dist = Math.sqrt((pos.x - point[0]) ** 2 + (pos.y - point[1]) ** 2);
+      if (dist < minDist && dist <= threshold) {
+        minDist = dist;
+        result = { shapeIndex: i, pointIndex: j };
+      }
+    });
+  });
+
+  return result;
+});
+
+const cursorStyle = computed(() => {
+  if (props.isEditMode) {
+    return hoveredPoint.value ? 'crosshair' : 'default';
+  }
+  return 'crosshair';
+});
+
 onMounted(() => {
   if (canvasRef.value) {
     emit('canvas-ready', canvasRef.value);
-    
+
     // 监听键盘快捷键放大缩小
     window.addEventListener('keydown', handleKeyDown);
   }
@@ -47,10 +77,20 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (e.ctrlKey || e.metaKey) {
     if (e.key === '=' || e.key === '+') {
       e.preventDefault();
-      emit('wheel', { deltaY: -100, preventDefault: () => {}, clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 } as any);
+      emit('wheel', {
+        deltaY: -100,
+        preventDefault: () => {},
+        clientX: window.innerWidth / 2,
+        clientY: window.innerHeight / 2,
+      } as any);
     } else if (e.key === '-') {
       e.preventDefault();
-      emit('wheel', { deltaY: 100, preventDefault: () => {}, clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 } as any);
+      emit('wheel', {
+        deltaY: 100,
+        preventDefault: () => {},
+        clientX: window.innerWidth / 2,
+        clientY: window.innerHeight / 2,
+      } as any);
     }
   }
 };
@@ -60,12 +100,12 @@ const getColorByLabel = (label: string) => {
   for (let i = 0; i < label.length; i++) {
     hash = label.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   // 生成更鲜艳的颜色：保证较高的饱和度和明度
   const h = Math.abs(hash) % 360; // 色相 0-360
   const s = 80 + (Math.abs(hash) % 20); // 饱和度 80-100%
   const l = 45 + (Math.abs(hash) % 20); // 明度 45-65%
-  
+
   return `hsl(${h}, ${s}%, ${l}%)`;
 };
 
@@ -77,29 +117,46 @@ const draw = () => {
 
   // 清除整个画布（使用视觉尺寸）
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
+
   // 保存当前状态
   ctx.save();
-  
+
   // 应用缩放和平移变换
   ctx.translate(props.offset.x, props.offset.y);
   ctx.scale(props.scale, props.scale);
 
   if (props.hasImageContent && props.htmlImage.complete) {
     // 图片本身的宽高就是其实际像素
-    ctx.drawImage(props.htmlImage, 0, 0, props.htmlImage.width, props.htmlImage.height);
+    ctx.drawImage(
+      props.htmlImage,
+      0,
+      0,
+      props.htmlImage.width,
+      props.htmlImage.height,
+    );
   }
 
   props.shapes.forEach((shape: Shape, index: number) => {
     const points = shape.points.map((p) => ({ x: p[0], y: p[1] }));
     const baseColor = getColorByLabel(shape.label);
     const isSelected = props.selectedShapeIndex === index;
-    
+
     // HSL 转换为 RGBA 以调整透明度
     const fillAlpha = isSelected ? 0.6 : 0.2;
     // 使用临时 canvas 或者 ctx.globalAlpha 来实现颜色带透明度
     // 为了简单，我们只改变颜色模式，直接画
-    drawPolygonWithHsl(ctx, points, baseColor, fillAlpha, isSelected);
+    const hoverIndex =
+      hoveredPoint.value?.shapeIndex === index
+        ? hoveredPoint.value.pointIndex
+        : -1;
+    drawPolygonWithHsl(
+      ctx,
+      points,
+      baseColor,
+      fillAlpha,
+      isSelected,
+      hoverIndex,
+    );
   });
 
   if (props.currentPolygon.length > 0) {
@@ -110,6 +167,7 @@ const draw = () => {
       'rgba(255, 0, 0, 1)',
       false,
       false,
+      -1,
     );
 
     if (props.mousePos) {
@@ -124,7 +182,7 @@ const draw = () => {
       ctx.setLineDash([]);
     }
   }
-  
+
   ctx.restore();
 };
 
@@ -134,8 +192,9 @@ const drawPolygonWithHsl = (
   hslColor: string,
   alpha: number,
   isSelected: boolean,
+  hoverIndex: number,
 ) => {
-   if (points.length === 0) return;
+  if (points.length === 0) return;
 
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
@@ -147,23 +206,36 @@ const drawPolygonWithHsl = (
   // 提取 HSL 值
   const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (match) {
-      ctx.fillStyle = `hsla(${match[1]}, ${match[2]}%, ${match[3]}%, ${alpha})`;
+    ctx.fillStyle = `hsla(${match[1]}, ${match[2]}%, ${match[3]}%, ${alpha})`;
   } else {
-      ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
+    ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
   }
-  
+
   ctx.fill();
   ctx.strokeStyle = isSelected ? '#FFFFFF' : hslColor;
-  ctx.lineWidth = (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
+  ctx.lineWidth =
+    (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
   ctx.stroke();
 
-  points.forEach((p) => {
+  points.forEach((p, idx) => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, (isSelected ? POINT_RADIUS_SELECTED : POINT_RADIUS) / props.scale, 0, Math.PI * 2);
-    ctx.fillStyle = ctx.strokeStyle;
+    const isHovered = idx === hoverIndex && props.isEditMode;
+    const radius = isHovered
+      ? POINT_RADIUS_SELECTED + 2
+      : isSelected
+        ? POINT_RADIUS_SELECTED
+        : POINT_RADIUS;
+    ctx.arc(p.x, p.y, radius / props.scale, 0, Math.PI * 2);
+    ctx.fillStyle = isHovered ? '#00FF00' : ctx.strokeStyle;
     ctx.fill();
+    if (isHovered) {
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1 / props.scale;
+      ctx.stroke();
+      ctx.strokeStyle = isSelected ? '#FFFFFF' : hslColor; // 恢复画笔颜色
+    }
   });
-}
+};
 
 const drawPolygon = (
   ctx: CanvasRenderingContext2D,
@@ -172,6 +244,7 @@ const drawPolygon = (
   strokeColor: string,
   isClosed: boolean,
   isSelected: boolean,
+  hoverIndex: number,
 ) => {
   if (points.length === 0) return;
 
@@ -188,26 +261,50 @@ const drawPolygon = (
   ctx.fillStyle = fillColor;
   ctx.fill();
   ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
+  ctx.lineWidth =
+    (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
   ctx.stroke();
 
-  points.forEach((p) => {
+  points.forEach((p, idx) => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, (isSelected ? POINT_RADIUS_SELECTED : POINT_RADIUS) / props.scale, 0, Math.PI * 2);
-    ctx.fillStyle = strokeColor;
+    const isHovered = idx === hoverIndex && props.isEditMode;
+    const radius = isHovered
+      ? POINT_RADIUS_SELECTED + 2
+      : isSelected
+        ? POINT_RADIUS_SELECTED
+        : POINT_RADIUS;
+    ctx.arc(p.x, p.y, radius / props.scale, 0, Math.PI * 2);
+    ctx.fillStyle = isHovered ? '#00FF00' : strokeColor;
     ctx.fill();
+    if (isHovered) {
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1 / props.scale;
+      ctx.stroke();
+      ctx.strokeStyle = strokeColor;
+    }
   });
 };
 
 defineExpose({
   draw,
-  getColorByLabel
+  getColorByLabel,
 });
 
-watch([() => props.shapes, () => props.currentPolygon, () => props.mousePos, () => props.selectedShapeIndex, () => props.hasImageContent, () => props.scale, () => props.offset], () => {
-  draw();
-}, { deep: true });
-
+watch(
+  [
+    () => props.shapes,
+    () => props.currentPolygon,
+    () => props.mousePos,
+    () => props.selectedShapeIndex,
+    () => props.hasImageContent,
+    () => props.scale,
+    () => props.offset,
+  ],
+  () => {
+    draw();
+  },
+  { deep: true },
+);
 </script>
 
 <template>
@@ -232,7 +329,7 @@ watch([() => props.shapes, () => props.currentPolygon, () => props.mousePos, () 
         @wheel.prevent="emit('wheel', $event)"
         @contextmenu="emit('right-click', $event)"
         class="drawing-canvas"
-        :style="{ cursor: isEditMode ? 'default' : 'crosshair' }"
+        :style="{ cursor: cursorStyle }"
       ></canvas>
     </div>
     <div class="instructions">
@@ -313,7 +410,7 @@ watch([() => props.shapes, () => props.currentPolygon, () => props.mousePos, () 
   text-align: center;
   position: absolute;
   bottom: 10px;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
   padding: 5px 10px;
   border-radius: 4px;
 }
@@ -328,7 +425,7 @@ watch([() => props.shapes, () => props.currentPolygon, () => props.mousePos, () 
     padding: 5px 10px;
   }
   .instructions {
-      display: none; /* 移动端空间小，隐藏提示 */
+    display: none; /* 移动端空间小，隐藏提示 */
   }
 }
 </style>
