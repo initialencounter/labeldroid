@@ -34,6 +34,7 @@ const emit = defineEmits<{
   (e: 'select-shape', index: number | null): void;
   (e: 'delete-shape', index: number): void;
   (e: 'save-annotations'): void;
+  (e: 'delete-annotations'): void;
   (e: 'shape-label-change'): void;
   (e: 'update:isEditMode', value: boolean): void;
 }>();
@@ -188,6 +189,13 @@ const updateDefaultLabelName = (event: Event) => {
         :disabled="!canSave"
       >
         保存标注 (JSON)
+      </button>
+      <button
+        class="delete-json-btn"
+        @click="emit('delete-annotations')"
+        :disabled="!currentImage?.has_annotation"
+      >
+        删除标注 (JSON)
       </button>
     </div>
   </div>
@@ -371,6 +379,9 @@ ul {
 
 .actions {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .save-btn {
@@ -390,6 +401,27 @@ ul {
 }
 
 .save-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.delete-json-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.delete-json-btn:hover {
+  background-color: #c82333;
+}
+
+.delete-json-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
 }

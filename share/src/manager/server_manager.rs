@@ -69,7 +69,7 @@ impl ServerManager {
             .route("/api/images/{name}", get(get_image))
             .route(
                 "/api/annotations/{name}",
-                get(get_annotation).post(save_annotation),
+                get(get_annotation).post(save_annotation).delete(delete_annotation),
             )
             .layer(cors)
             .with_state(state);
@@ -189,6 +189,36 @@ async fn save_annotation(
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({ "ok": false, "result": format!("Failed to create file: {}", e) })),
+        )
+            .into_response(),
+    }
+}
+
+async fn delete_annotation(
+    State(state): State<AppState>,
+    AxumPath(name): AxumPath<String>,
+) -> impl IntoResponse {
+    let path = Path::new(&name);
+    let stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    let json_path = state.workspace_dir.join(format!("{}.json", stem));
+
+    if !json_path.exists() {
+        return (
+            StatusCode::OK,
+            Json(serde_json::json!({ "ok": true, "result": "Already deleted or not found" })),
+        )
+            .into_response();
+    }
+
+    match std::fs::remove_file(json_path) {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(serde_json::json!({ "ok": true, "result": "Deleted" })),
+        )
+            .into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({ "ok": false, "result": format!("Failed to delete file: {}", e) })),
         )
             .into_response(),
     }

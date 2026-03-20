@@ -44,6 +44,25 @@ class APIManager {
       throw error
     }
   }
+
+  async delete(endpoint: string): Promise<any> {
+    try {
+      if (!this.serverPort) {
+        this.serverPort = await getServerPort()
+      }
+      const url = `http://127.0.0.1:${this.serverPort}${endpoint}`
+      const response = await fetch(url, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`)
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('API request error:', error)
+      throw error
+    }
+  }
 }
 
 export const apiManager = new APIManager(null)

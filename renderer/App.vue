@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import Sidebar from './components/Sidebar.vue';
 import CanvasArea from './components/CanvasArea.vue';
 import type { ImageInfo, Shape, LabelmeData } from './types';
@@ -457,6 +457,38 @@ const saveAnnotations = async () => {
   }
 };
 
+const deleteAnnotations = async () => {
+  if (!currentImage.value) return;
+
+  try {
+    await ElMessageBox.confirm('确定要删除当前图片的 JSON 标注文件吗？', '警告', {
+      type: 'warning',
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+    });
+  } catch {
+    return; // User cancelled
+  }
+
+  try {
+    const res = await apiManager.delete(
+      `/api/annotations/${currentImage.value.name}`,
+    );
+    console.info('Delete response:', res);
+    if (res.ok) {
+      ElMessage.success('已清空并删除 JSON 标注文件!');
+      shapes.value = [];
+      await fetchImages();
+      canvasAreaRef.value?.draw();
+    } else {
+      ElMessage.error('删除失败');
+    }
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('删除错误');
+  }
+};
+
 onMounted(() => {
   fetchImages();
   window.addEventListener('resize', () => {
@@ -485,6 +517,7 @@ onMounted(() => {
       @select-shape="selectShape"
       @delete-shape="deleteShape"
       @save-annotations="saveAnnotations"
+      @delete-annotations="deleteAnnotations"
       @shape-label-change="canvasAreaRef?.draw()"
     />
 
