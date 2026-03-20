@@ -27,6 +27,12 @@ const emit = defineEmits<{
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
+// 可自定义的多边形线段和点的尺寸变量
+const STROKE_WIDTH = 1;
+const STROKE_WIDTH_SELECTED = 2;
+const POINT_RADIUS = 1.5;
+const POINT_RADIUS_SELECTED = 2.5;
+
 onMounted(() => {
   if (canvasRef.value) {
     emit('canvas-ready', canvasRef.value);
@@ -112,7 +118,7 @@ const draw = () => {
       ctx.moveTo(lastPoint.x, lastPoint.y);
       ctx.lineTo(props.mousePos.x, props.mousePos.y);
       ctx.strokeStyle = 'red';
-      ctx.lineWidth = 2 / props.scale; // 保持线条视觉宽度一致
+      ctx.lineWidth = STROKE_WIDTH / props.scale; // 保持线条视觉宽度一致
       ctx.setLineDash([5 / props.scale, 5 / props.scale]);
       ctx.stroke();
       ctx.setLineDash([]);
@@ -148,12 +154,12 @@ const drawPolygonWithHsl = (
   
   ctx.fill();
   ctx.strokeStyle = isSelected ? '#FFFFFF' : hslColor;
-  ctx.lineWidth = (isSelected ? 4 : 2) / props.scale;
+  ctx.lineWidth = (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
   ctx.stroke();
 
   points.forEach((p) => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, (isSelected ? 6 : 4) / props.scale, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, (isSelected ? POINT_RADIUS_SELECTED : POINT_RADIUS) / props.scale, 0, Math.PI * 2);
     ctx.fillStyle = ctx.strokeStyle;
     ctx.fill();
   });
@@ -182,12 +188,12 @@ const drawPolygon = (
   ctx.fillStyle = fillColor;
   ctx.fill();
   ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = (isSelected ? 4 : 2) / props.scale;
+  ctx.lineWidth = (isSelected ? STROKE_WIDTH_SELECTED : STROKE_WIDTH) / props.scale;
   ctx.stroke();
 
   points.forEach((p) => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, (isSelected ? 6 : 4) / props.scale, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, (isSelected ? POINT_RADIUS_SELECTED : POINT_RADIUS) / props.scale, 0, Math.PI * 2);
     ctx.fillStyle = strokeColor;
     ctx.fill();
   });
