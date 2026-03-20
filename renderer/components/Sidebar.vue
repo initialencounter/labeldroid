@@ -77,7 +77,7 @@ const updateDefaultLabelName = (event: Event) => {
       </button>
     </div>
 
-    <div class="section">
+    <div class="section scrollable">
       <h3>图片列表</h3>
       <ul class="image-list">
         <li
@@ -104,7 +104,7 @@ const updateDefaultLabelName = (event: Event) => {
       />
     </div>
 
-    <div class="section">
+    <div class="section scrollable">
       <h3>标注多边形 ({{ shapes.length }})</h3>
       <ul class="polygon-list">
         <li
@@ -163,8 +163,20 @@ const updateDefaultLabelName = (event: Event) => {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  overflow-y: auto;
+  overflow: hidden;
   z-index: 10;
+  box-sizing: border-box;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.section.scrollable {
+  flex: 1;
+  min-height: 0;
 }
 
 .single-toggle {
@@ -208,6 +220,11 @@ ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
+}
+
+.image-list, .polygon-list {
+  overflow-y: auto;
+  flex: 1;
 }
 
 .image-list li {
