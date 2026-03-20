@@ -22,15 +22,35 @@ const emit = defineEmits<{
   (e: 'update:isEditMode', value: boolean): void;
 }>();
 
-const getColorByLabel = (label: string) => {
-  let hash = 0;
-  for (let i = 0; i < label.length; i++) {
-    hash = label.charCodeAt(i) + ((hash << 5) - hash);
+const getVocColormap = () => {
+  const cmap = [];
+  for (let i = 0; i < 256; i++) {
+    let r = 0, g = 0, b = 0;
+    let c = i;
+    for (let j = 0; j < 8; j++) {
+      r = r | (((c >> 0) & 1) << (7 - j));
+      g = g | (((c >> 1) & 1) << (7 - j));
+      b = b | (((c >> 2) & 1) << (7 - j));
+      c = c >> 3;
+    }
+    cmap.push(`rgb(${r}, ${g}, ${b})`);
   }
-  const h = Math.abs(hash) % 360; 
-  const s = 80 + (Math.abs(hash) % 20); 
-  const l = 45 + (Math.abs(hash) % 20); 
-  return `hsl(${h}, ${s}%, ${l}%)`;
+  return cmap;
+};
+
+const vocColormap = getVocColormap();
+
+const getColorByLabel = (label: string) => {
+  // 获取当前所有的唯一标签并按顺序去重
+  const uniqueLabels = Array.from(new Set(props.shapes.map((s) => s.label)));
+  // 查找当前 label 所在的索引
+  let index = uniqueLabels.indexOf(label);
+  if (index === -1) {
+    index = uniqueLabels.length; // 新标签预判
+  }
+  // labelme 中 label_id 默认从 1 开始（跳过黑色）
+  const labelId = (1 + index) % vocColormap.length;
+  return vocColormap[labelId];
 };
 
 const updateDefaultLabelName = (event: Event) => {
