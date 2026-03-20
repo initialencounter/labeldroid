@@ -113,13 +113,17 @@ const getVocColormap = () => {
 
 const vocColormap = getVocColormap();
 
+const cachedLabels = ref<Set<string>>(new Set());
+
+watch(() => props.shapes, (newShapes) => {
+  newShapes.forEach(s => cachedLabels.value.add(s.label));
+}, { immediate: true, deep: true });
+
 const getColorByLabel = (label: string) => {
-  // 获取当前所有的唯一标签并按顺序去重
-  const uniqueLabels = Array.from(new Set(props.shapes.map((s) => s.label)));
-  // 查找当前 label 所在的索引
-  let index = uniqueLabels.indexOf(label);
+  const labelsArray = Array.from(cachedLabels.value);
+  let index = labelsArray.indexOf(label);
   if (index === -1) {
-    index = uniqueLabels.length; // 新标签预判
+    index = labelsArray.length; // 新标签预判
   }
   // labelme 中 label_id 默认从 1 开始（跳过黑色）
   const labelId = (1 + index) % vocColormap.length;

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue';
 import type { ImageInfo, Shape } from '../types';
 
 const props = defineProps<{
@@ -10,6 +11,14 @@ const props = defineProps<{
   canSave: boolean;
   isEditMode: boolean;
 }>();
+
+const cachedLabels = ref<Set<string>>(new Set());
+
+watch(() => props.shapes, (newShapes) => {
+  newShapes.forEach(s => cachedLabels.value.add(s.label));
+}, { immediate: true, deep: true });
+
+const uniqueLabels = computed(() => Array.from(cachedLabels.value));
 
 const emit = defineEmits<{
   (e: 'select-image', img: ImageInfo): void;
@@ -41,12 +50,10 @@ const getVocColormap = () => {
 const vocColormap = getVocColormap();
 
 const getColorByLabel = (label: string) => {
-  // 获取当前所有的唯一标签并按顺序去重
-  const uniqueLabels = Array.from(new Set(props.shapes.map((s) => s.label)));
-  // 查找当前 label 所在的索引
-  let index = uniqueLabels.indexOf(label);
+  const labelsArray = uniqueLabels.value;
+  let index = labelsArray.indexOf(label);
   if (index === -1) {
-    index = uniqueLabels.length; // 新标签预判
+    index = labelsArray.length; // 新标签预判
   }
   // labelme 中 label_id 默认从 1 开始（跳过黑色）
   const labelId = (1 + index) % vocColormap.length;
@@ -121,6 +128,16 @@ const updateDefaultLabelName = (event: Event) => {
               @change="emit('shape-label-change')"
               @click.stop
             />
+            <select
+              v-if="uniqueLabels.length > 0"
+              v-model="shape.label"
+              class="inline-select"
+              @change="emit('shape-label-change')"
+              @click.stop
+            >
+              <option :value="shape.label" disabled hidden></option>
+              <option v-for="lbl in uniqueLabels" :key="lbl" :value="lbl">{{ lbl }}</option>
+            </select>
           </div>
           <button class="delete-btn" @click.stop="emit('delete-shape', index)">
             删
@@ -253,10 +270,29 @@ ul {
 }
 
 .inline-input {
-  width: 120px;
+  width: 80px;
   padding: 4px;
   border: 1px solid #ddd;
   border-radius: 3px;
+}
+
+.inline-select {
+  width: 20px;
+  padding: 4px 0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px;
+}
+
+.inline-select:focus {
+  outline: none;
+  border-color: #0d6efd;
 }
 
 .delete-btn {
