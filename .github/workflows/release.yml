@@ -123,6 +123,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          yarn tauri icon public/logo.svg
           yarn tauri build -t ${{ matrix.config.target }}
           version=${GITHUB_REF:11}
           installer=${{ github.ref_name }} target/${{ matrix.config.target }}/release/bundle/msi/labeldroid_${version}_x64_zh-CN.msi
