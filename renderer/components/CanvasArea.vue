@@ -353,12 +353,6 @@ watch(
         :style="{ cursor: cursorStyle }"
       ></canvas>
     </div>
-    <div class="instructions">
-      <p>
-        <strong>操作：</strong
-        >左键/点击画点；双指捏合/滚轮缩放；按住拖动画布；右击闭合；侧栏改名。
-      </p>
-    </div>
   </div>
 </template>
 
@@ -422,18 +416,6 @@ watch(
 .drawing-canvas {
   display: block;
   cursor: crosshair;
-}
-
-.instructions {
-  margin-top: 15px;
-  color: #6c757d;
-  font-size: 14px;
-  text-align: center;
-  position: absolute;
-  bottom: 10px;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 5px 10px;
-  border-radius: 4px;
 }
 
 @media (max-width: 768px) {

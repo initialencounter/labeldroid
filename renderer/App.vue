@@ -462,7 +462,6 @@ const saveAnnotations = async () => {
       `/api/annotations/${currentImage.value.name}`,
       payload,
     );
-    console.info('Save response:', res);
     if (res.ok) {
       ElMessage.success('保存成功!');
       await fetchImages();
