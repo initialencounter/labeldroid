@@ -1,0 +1,124 @@
+name: Release Labeldroid
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Labeldroid ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  release:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: windows-latest
+            release: windows
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            release: android
+            target: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.config.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.config.os }}-${{ matrix.config.release }}-${{ matrix.config.target }}-cargo
+
+      - name: Setup Java (for Android build only)
+        if: matrix.config.release == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK (for Android build only)
+        if: matrix.config.release == 'android'
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK (for Android build only)
+        if: matrix.config.release == 'android'
+        run: sdkmanager "ndk;28.2.13676358"
+
+      - name: Build and upload Android APKs
+        if: matrix.config.release == 'android'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+        run: |
+          rm -rf src-tauri/gen/android
+          yarn tauri android init
+          yarn tauri icon public/logo.svg
+
+          pushd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+          popd
+
+          version=${GITHUB_REF:11}
+          apk_path=src-tauri/gen/android/app/build/outputs/apk/universal/release
+          arm64_apk=Labeldroid_${version}_arm64.apk
+          universal_apk=Labeldroid_${version}_universal.apk
+          
+          # Initialize android config if missing (optional but recommended for a clean setup based on the referenced workflow)
+          # yarn tauri android init
+          
+          # We manually invoke tauri build for Android using yarn
+          yarn tauri android build -t aarch64 --apk
+          cp ${apk_path}/app-universal-release.apk $arm64_apk
+          
+          # Build universal APK
+          yarn tauri android build --apk
+          cp ${apk_path}/app-universal-release.apk $universal_apk
+
+          echo "Uploading $arm64_apk to GitHub release"
+          gh release upload ${{ github.ref_name }} $arm64_apk --clobber
+          
+          echo "Uploading $universal_apk to GitHub release"
+          gh release upload ${{ github.ref_name }} $universal_apk --clobber
+
+      - name: Build and Upload Windows Release
+        if: matrix.config.release == 'windows'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          yarn tauri build -t ${{ matrix.config.target }}
+          version=${GITHUB_REF:11}
+          installer=${{ github.ref_name }} target/${{ matrix.config.target }}/release/bundle/msi/labeldroid_${version}_x64_zh-CN.msi
+          echo "Uploading $installer to GitHub release"
+          gh release upload $installer --clobber
