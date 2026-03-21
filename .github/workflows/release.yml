@@ -81,6 +81,7 @@ jobs:
           rm -rf src-tauri/gen/android
           yarn tauri android init
           yarn tauri icon public/logo.svg
+          git checkout src-tauri/gen/android
 
           pushd src-tauri/gen/android
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
