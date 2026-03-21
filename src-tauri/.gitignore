@@ -19,3 +19,6 @@ workspace.xml
 
 # Rust
 **/*.rs.bk
+
+/gen/android
+/icons
