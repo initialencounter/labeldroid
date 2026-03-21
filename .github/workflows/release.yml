@@ -128,4 +128,4 @@ jobs:
           version=${GITHUB_REF:11}
           installer=target/${{ matrix.config.target }}/release/bundle/msi/labeldroid_${version}_x64_zh-CN.msi
           echo "Uploading $installer to GitHub release"
-          gh release upload $installer --clobber
+          gh release upload ${{ github.ref_name }} $installer --clobber
