@@ -139,6 +139,33 @@ const updateDefaultLabelName = (event: Event) => {
   const target = event.target as HTMLInputElement;
   emit('update:defaultLabelName', target.value);
 };
+
+const goToOption = (step: number) => {
+  if (props.images.length === 0) return;
+  let currentIndex = 0;
+  if (props.currentImage) {
+    currentIndex = props.images.findIndex(
+      (img) => img.name === props.currentImage!.name,
+    );
+  }
+  let targetIndex = currentIndex + step;
+  if (targetIndex < 0) {
+    targetIndex = props.images.length - 1;
+  } else if (targetIndex >= props.images.length) {
+    targetIndex = 0;
+  }
+  
+  emit('select-image', props.images[targetIndex]);
+  setTimeout(() => {
+    const el = document.getElementById('img-item-' + targetIndex);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
+};
+
+const jumpToPrev = () => goToOption(-1);
+const jumpToNext = () => goToOption(1);
 </script>
 
 <template>
@@ -184,7 +211,23 @@ const updateDefaultLabelName = (event: Event) => {
           style="flex: 1; background-color: #0d6efd"
           @click="jumpToNextUnlabeled"
         >
-          下一未标注
+          下一未标
+        </button>
+      </div>
+      <div style="display: flex; gap: 0px; margin-top: 5px">
+        <button
+          class="save-btn"
+          style="flex: 1; background-color: #6c757d"
+          @click="jumpToPrev"
+        >
+          上一张
+        </button>
+        <button
+          class="save-btn"
+          style="flex: 1; background-color: #0dcaf0"
+          @click="jumpToNext"
+        >
+          下一张
         </button>
       </div>
     </div>
