@@ -3,6 +3,7 @@
     "bindings/node"
   ],
   "name": "labeldroid",
+  "license": "MIT",
   "private": true,
   "version": "0.1.0",
   "type": "module",
