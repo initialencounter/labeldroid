@@ -374,24 +374,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@labeldroid/renderer@workspace:*, @labeldroid/renderer@workspace:renderer":
-  version: 0.0.0-use.local
-  resolution: "@labeldroid/renderer@workspace:renderer"
-  dependencies:
-    "@tauri-apps/api": "npm:^2"
-    "@tauri-apps/cli": "npm:^2.10.1"
-    "@tauri-apps/plugin-dialog": "npm:~2"
-    "@tauri-apps/plugin-log": "npm:^2.8.0"
-    "@tauri-apps/plugin-opener": "npm:^2"
-    "@vitejs/plugin-vue": "npm:^6.0.5"
-    element-plus: "npm:^2.13.6"
-    typescript: "npm:^5.9.3"
-    vite: "npm:^8.0.0"
-    vue: "npm:^3.5.13"
-    vue-tsc: "npm:^3.2.6"
-  languageName: unknown
-  linkType: soft
-
 "@mapbox/node-pre-gyp@npm:^2.0.0":
   version: 2.0.3
   resolution: "@mapbox/node-pre-gyp@npm:2.0.3"
@@ -3084,8 +3066,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "labeldroid@workspace:."
   dependencies:
-    "@labeldroid/renderer": "workspace:*"
+    "@tauri-apps/api": "npm:^2"
     "@tauri-apps/cli": "npm:^2.10.1"
+    "@tauri-apps/plugin-dialog": "npm:~2"
+    "@tauri-apps/plugin-log": "npm:^2.8.0"
+    "@tauri-apps/plugin-opener": "npm:^2"
+    "@vitejs/plugin-vue": "npm:^6.0.5"
+    element-plus: "npm:^2.13.6"
+    typescript: "npm:^5.9.3"
+    vite: "npm:^8.0.1"
+    vue: "npm:^3.5.13"
     vue-tsc: "npm:^3.2.6"
   languageName: unknown
   linkType: soft
@@ -4273,7 +4263,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^8.0.0":
+"vite@npm:^8.0.1":
   version: 8.0.1
   resolution: "vite@npm:8.0.1"
   dependencies:
