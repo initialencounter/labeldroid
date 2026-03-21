@@ -59,6 +59,7 @@ android {
             }
         }
         getByName("release") {
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
             isMinifyEnabled = true
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("signing")
