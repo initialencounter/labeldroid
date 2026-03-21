@@ -203,6 +203,25 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
 
       if (isEditMode.value && draggingPoint.value !== null) {
         // 编辑点
+        // 边缘检测与画布移动
+        const rect = canvasEl.getBoundingClientRect();
+        const edgeThreshold = 40; // 边缘触发阈值(像素)
+        const panSpeed = 10; // 画布移动速度(像素)
+
+        let panX = 0;
+        let panY = 0;
+
+        if (e.clientX - rect.left < edgeThreshold) panX = panSpeed;
+        else if (rect.right - e.clientX < edgeThreshold) panX = -panSpeed;
+        
+        if (e.clientY - rect.top < edgeThreshold) panY = panSpeed;
+        else if (rect.bottom - e.clientY < edgeThreshold) panY = -panSpeed;
+
+        if (panX !== 0 || panY !== 0) {
+          offset.value.x += panX * (canvasEl.width / rect.width);
+          offset.value.y += panY * (canvasEl.height / rect.height);
+        }
+
         // 移动设备下，将点向上偏移，避免手指遮挡
         const offsetY = e.pointerType === 'touch' ? -50 : 0;
         const offsetX = e.pointerType === 'touch' ? -50 : 0;
