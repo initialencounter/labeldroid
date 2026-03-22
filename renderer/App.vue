@@ -213,7 +213,7 @@ const handlePointerMove = (e: PointerEvent | MouseEvent | TouchEvent) => {
 
         if (e.clientX - rect.left < edgeThreshold) panX = panSpeed;
         else if (rect.right - e.clientX < edgeThreshold) panX = -panSpeed;
-        
+
         if (e.clientY - rect.top < edgeThreshold) panY = panSpeed;
         else if (rect.bottom - e.clientY < edgeThreshold) panY = -panSpeed;
 
@@ -478,11 +478,15 @@ const deleteAnnotations = async () => {
   if (!currentImage.value) return;
 
   try {
-    await ElMessageBox.confirm('确定要删除当前图片的 JSON 标注文件吗？', '警告', {
-      type: 'warning',
-      confirmButtonText: '确定删除',
-      cancelButtonText: '取消',
-    });
+    await ElMessageBox.confirm(
+      '确定要删除当前图片的 JSON 标注文件吗？',
+      '警告',
+      {
+        type: 'warning',
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+      },
+    );
   } catch {
     return; // User cancelled
   }
@@ -519,25 +523,6 @@ onMounted(() => {
 
 <template>
   <div class="labelme-container">
-    <Sidebar
-      :images="images"
-      :currentImage="currentImage"
-      :shapes="shapes"
-      :selectedShapeIndex="selectedShapeIndex"
-      :defaultLabelName="defaultLabelName"
-      :canSave="!!currentImage"
-      :isEditMode="isEditMode"
-      @update:isEditMode="isEditMode = $event"
-      @select-image="selectImage"
-      @refresh-images="fetchImages"
-      @update:defaultLabelName="defaultLabelName = $event"
-      @select-shape="selectShape"
-      @delete-shape="deleteShape"
-      @save-annotations="saveAnnotations"
-      @delete-annotations="deleteAnnotations"
-      @shape-label-change="canvasAreaRef?.draw()"
-    />
-
     <CanvasArea
       ref="canvasAreaRef"
       :isEditMode="isEditMode"
@@ -557,6 +542,24 @@ onMounted(() => {
       @right-click="handleRightClick"
       @finish-polygon="finishCurrentPolygon"
       @cancel-polygon="cancelCurrentPolygon"
+    />
+    <Sidebar
+      :images="images"
+      :currentImage="currentImage"
+      :shapes="shapes"
+      :selectedShapeIndex="selectedShapeIndex"
+      :defaultLabelName="defaultLabelName"
+      :canSave="!!currentImage"
+      :isEditMode="isEditMode"
+      @update:isEditMode="isEditMode = $event"
+      @select-image="selectImage"
+      @refresh-images="fetchImages"
+      @update:defaultLabelName="defaultLabelName = $event"
+      @select-shape="selectShape"
+      @delete-shape="deleteShape"
+      @save-annotations="saveAnnotations"
+      @delete-annotations="deleteAnnotations"
+      @shape-label-change="canvasAreaRef?.draw()"
     />
   </div>
 </template>
