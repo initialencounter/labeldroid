@@ -2047,9 +2047,11 @@ dependencies = [
 name = "labeldroid_rs"
 version = "0.1.0"
 dependencies = [
+ "labeldroid-types",
  "napi",
  "napi-build",
  "napi-derive",
+ "share",
 ]
 
 [[package]]

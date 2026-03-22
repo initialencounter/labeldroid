@@ -1,4 +1,3 @@
-use dirs::home_dir;
 use labeldroid_types::config::Config;
 use lazy_static::lazy_static;
 use std::path::PathBuf;
@@ -8,7 +7,7 @@ lazy_static! {
     pub static ref CONFIG_PATH: PathBuf = {
         #[cfg(not(target_os = "android"))]
         {
-            let mut path = home_dir().unwrap_or_else(|| PathBuf::from("."));
+            let mut path = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
             path.push(".labelmerc");
             path
         }

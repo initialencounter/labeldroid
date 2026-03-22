@@ -11,6 +11,8 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = "3.0.0"
 napi-derive = "3.0.0"
+labeldroid-types = { path = "../../types", features = ["napi-support"] }
+share = { path = "../../share", features = ["napi-support"] }
 
 [build-dependencies]
 napi-build = "2"
