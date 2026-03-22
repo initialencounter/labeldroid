@@ -9,7 +9,7 @@ pub fn apply(app: &mut App) {
         dir
     } else {
         #[cfg(target_os = "android")]
-        let fallback_dir = PathBuf::from("/storage/emulated/0/Download/labeldroid");
+        let fallback_dir = PathBuf::from("/storage/emulated/0/Android/data/com.initialencounter.labeldroid/files/Documents");
 
         #[cfg(not(target_os = "android"))]
         let fallback_dir = {
