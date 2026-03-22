@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const cachedLabels = ref<Set<string>>(new Set());
 
-const isPhone = computed(() => window.innerWidth <= 1280);
+const isPhone = computed(() => window.innerWidth <= 768);
 
 watch(
   () => props.shapes,
