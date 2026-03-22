@@ -5,6 +5,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use labeldroid_types::config::Config;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{
@@ -13,7 +14,7 @@ use std::{
 };
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::utils::bind_available_port;
+use crate::{config::ConfigManager, utils::bind_available_port};
 
 pub struct ServerManager {
     port: u16,
@@ -69,8 +70,11 @@ impl ServerManager {
             .route("/api/images/{name}", get(get_image))
             .route(
                 "/api/annotations/{name}",
-                get(get_annotation).post(save_annotation).delete(delete_annotation),
+                get(get_annotation)
+                    .post(save_annotation)
+                    .delete(delete_annotation),
             )
+            .route("/api/config", get(get_config).post(save_config))
             .layer(cors)
             .with_state(state);
 
@@ -222,4 +226,19 @@ async fn delete_annotation(
         )
             .into_response(),
     }
+}
+
+async fn get_config() -> impl IntoResponse {
+    let config = ConfigManager::get_config();
+    (StatusCode::OK, Json(config)).into_response()
+}
+
+async fn save_config(Json(payload): Json<Config>) -> impl IntoResponse {
+    ConfigManager::save_config(&payload);
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({ "ok": true, "result": "Config saved" })),
+    )
+        .into_response()
+        .into_response()
 }
