@@ -24,6 +24,11 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
+        builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    }
+
+    #[cfg(desktop)]
+    {
         builder = builder.plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
             None,

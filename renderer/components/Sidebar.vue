@@ -166,6 +166,11 @@ const goToOption = (step: number) => {
 
 const jumpToPrev = () => goToOption(-1);
 const jumpToNext = () => goToOption(1);
+
+defineExpose({
+  jumpToPrev,
+  jumpToNext,
+})
 </script>
 
 <template>

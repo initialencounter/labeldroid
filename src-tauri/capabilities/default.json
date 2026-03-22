@@ -9,6 +9,7 @@
     "core:default",
     "log:allow-log",
     "log:default",
-    "dialog:default"
+    "dialog:default",
+    "global-shortcut:allow-register"
   ]
 }
